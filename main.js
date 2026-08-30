@@ -1,5 +1,6 @@
 const scene = new THREE.Scene();
 const size = 10; 
+const loader = new THREE.TextureLoader();
 const aspect = window.innerWidth / window.innerHeight;
 const camera = new THREE.OrthographicCamera(
     -size * aspect, 
@@ -22,7 +23,7 @@ function animate() {
 animate();
 const floor = new THREE.Mesh(
     new THREE.PlaneGeometry(70, 70),
-    new THREE.MeshStandardMaterial({ color: 0x1b1440 })
+    new THREE.MeshStandardMaterial({ map: loader.load('Esther 2026-03-14 at 22.44.55.jpeg') })
 );
 floor.rotation.x = -Math.PI / 2;
 scene.add(floor);
