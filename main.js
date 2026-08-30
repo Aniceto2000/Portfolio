@@ -1,7 +1,11 @@
+/** @type {THREE.Mesh} */
 const scene = new THREE.Scene();
 const size = 10; 
 const loader = new THREE.TextureLoader();
+const texture = loader.load('Esther 2026-03-14 at 22.44.55.jpeg');
+texture.colorSpace = THREE.SRGBColorSpace;
 const aspect = window.innerWidth / window.innerHeight;
+
 const camera = new THREE.OrthographicCamera(
     -size * aspect, 
      size * aspect, 
@@ -10,6 +14,7 @@ const camera = new THREE.OrthographicCamera(
     0.1,           
     1000           
 );
+
 const renderer = new THREE.WebGLRenderer({antialias: true});
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
@@ -20,10 +25,11 @@ function animate() {
     requestAnimationFrame(animate);
     renderer.render(scene, camera);
 }
+
 animate();
 const floor = new THREE.Mesh(
     new THREE.PlaneGeometry(70, 70),
-    new THREE.MeshStandardMaterial({ map: loader.load('Esther 2026-03-14 at 22.44.55.jpeg') })
+    new THREE.MeshStandardMaterial({ color: 0x1b1440})
 );
 floor.rotation.x = -Math.PI / 2;
 scene.add(floor);
@@ -37,9 +43,3 @@ const box = new THREE.Mesh(
 );
 box.position.set(1, 1, -10);
 scene.add(box);
-const box2 = new THREE.Mesh(
-    new THREE.BoxGeometry(2, 10, 12),
-    new THREE.MeshStandardMaterial({ color: 0x00ff00 })
-);
-box.position.set(1, 1, -10);
-scene.add(box2);
