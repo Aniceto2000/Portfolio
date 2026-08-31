@@ -8,7 +8,8 @@ const forwardDirection = new THREE.Vector3();
 function animate() {
     requestAnimationFrame(animate);
     const delta = clock.getDelta();
-    if (keys['shift']) speed=8;
+    if (keys['shift']) speed=16;
+    else speed=4;
     if (keys['a']) robot.rotation.y += 2 * delta;
     if (keys['d']) robot.rotation.y -= 2 * delta;
 
