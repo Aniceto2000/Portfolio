@@ -1,8 +1,8 @@
 /** @type {THREE.Mesh} */
 const scene = new THREE.Scene();
 const size = 10; 
-const loader = new THREE.TextureLoader();
-const texture = loader.load('Esther 2026-03-14 at 22.44.55.jpeg');
+const loaderTexture = new THREE.TextureLoader();
+const texture = loaderTexture.load('Esther 2026-03-14 at 22.44.55.jpeg');
 texture.colorSpace = THREE.SRGBColorSpace;
 const aspect = window.innerWidth / window.innerHeight;
 
