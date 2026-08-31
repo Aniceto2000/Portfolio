@@ -2,7 +2,7 @@ const loaderGlb = new THREE.GLTFLoader();
 
 // Carrega o arquivo .glb
 loaderGlb.load(
-  '/Sem título.glb',
+  './Sem título.glb',
   (gltf) => {
 
     const model = gltf.scene;
@@ -15,7 +15,7 @@ loaderGlb.load(
 
 const loaderJava = new THREE.GLTFLoader();
 loaderGlb.load(
-  '/HTML.glb',
+  './HTML.glb',
   (gltf) => {
 
     const model = gltf.scene;
