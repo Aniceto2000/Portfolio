@@ -23,6 +23,6 @@ function animate() {
     const targetPos = robot.position.clone().add(offset);
     camera.position.lerp(targetPos, 0.08);
     camera.lookAt(robot.position);
-
+   // scene.model.rotation.y+=1
     renderer.render(scene, camera);
 }
