@@ -1,0 +1,8 @@
+.DS_Store
+node_modules/
+Assembly 1.gltf
+Assembly 1.glb
+robot_named.glb
+robot_opt.glb
+*.docx
+Estudo_ThreeJS_Portfolio_3D.pdf

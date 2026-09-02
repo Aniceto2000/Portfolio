@@ -4,7 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-A learning project (Portuguese-language: commit messages, code comments, and `Estudo_ThreeJS_Portfolio_3D.pdf` are all in PT-BR) for building a 3D portfolio scene with Three.js. There is **no build system, no package manager, no tests, and no linter** — it is a static site of hand-written scripts loaded from CDN.
+A learning project (Portuguese-language: commit messages and `Estudo_ThreeJS_Portfolio_3D.pdf` are PT-BR) — a 3D portfolio scene with Three.js themed around robotics / FIRST. There is **no build system, no package manager, no tests, and no linter** — it is a static site of hand-written scripts loaded from CDN.
+
+The user has asked for **no comments in the code**. Keep all `.js` / `.html` comment-free.
 
 ## Running it
 
@@ -15,21 +17,27 @@ python3 -m http.server 8000
 # then open http://localhost:8000
 ```
 
-Controls once running: `W`/`S` move the robot forward/back along its facing, `A`/`D` rotate it, `Shift` sprints. The camera lerps to follow the robot.
+Note: `requestAnimationFrame` is throttled/paused when the tab is in the background, so the render loop only advances while the tab is focused. Verify motion logic by driving `animate()` manually from the devtools console (temporarily stub `clock.getDelta` to a fixed value) rather than trusting a backgrounded tab.
+
+Controls: `W`/`A`/`S`/`D` move the robot holonomically (including sideways strafe), `Q`/`E` rotate it in place, `Shift` sprints. The camera lerps to follow the robot.
 
 ## Architecture
 
-Three.js `r128` and `GLTFLoader` load from CDN in `index.html`. All four local scripts run in the **global scope and share globals** (`scene`, `camera`, `renderer`, `robot`) — there are no modules, imports, or exports. **Script order in `index.html` is load-bearing:**
+Three.js `r128`, `GLTFLoader`, and `DRACOLoader` load from CDN in `index.html`. All local scripts run in the **global scope and share globals** — no modules, imports, or exports. **Script order in `index.html` is load-bearing:**
 
-1. `main.js` — creates `scene`, the `OrthographicCamera`, the `WebGLRenderer` (appended to `document.body`), lights, floor plane, and a placeholder green box.
-2. `robot.js` — builds the player `robot` as a `THREE.Group` (body + two wheels) and adds it to `scene`. Depends on `scene` from main.js.
-3. `moviment.js` — keyboard state, the follow-camera math, and the render loop. Depends on `robot` and `camera`.
-4. `languages.js` — async-loads `Py.glb`, `HTML.glb`, `CSS.glb` and positions them in the scene.
+1. `main.js` — `scene`, `OrthographicCamera`, `WebGLRenderer`, lights (`robotLight` is a point light moved to follow the robot each frame), and the PCB floor. The floor's base and glow textures are drawn procedurally on a `<canvas>` (`makePcbTexture` / `makePcbGlowTexture`). Exposes `pcbMaterial` and `pcbGlow` for the loop to animate. Has **no render loop**.
+2. `robot.js` — creates `robot` as an empty `THREE.Group` **synchronously** (so the loop can reference it immediately), then `robotLoader.load('./robot.glb', ...)`. `setupRealRobot` scales the model so its footprint is ~3.6 units, drops the chassis onto the floor, then adds four procedural mecanum wheel groups (`makeWheel`, radius `WHEEL_CAD_RADIUS`) at `WHEEL_LOCAL` (the real CAD wheel centres, in the model's own metre-scale frame, ×scale). The wheels are true CAD-size so they tuck up inside the chassis — visible spinning only from underneath. `buildFallbackRobot` (primitive chassis + 4 wheels) runs on load error so the scene always works. `robotLoader` is a separate `GLTFLoader` from `languages.js`'s `loader`, with a `DRACOLoader` attached (decoder from the unpkg three r128 `libs/draco/` path).
+3. `moviment.js` — keyboard state, the single render loop (`animate()`, called once at the bottom). Holonomic movement in the robot's local frame, position clamped to `±HALF` (floor edge), mecanum wheel-spin kinematics applied to `wheels` (each wheel group spun on local X), follow-camera, and the PCB glow animation (`pcbMaterial.emissiveIntensity` pulse + `pcbGlow.offset.x` scroll). `delta` is clamped to `0.05` to survive tab refocus.
+4. `languages.js` — async-loads `Py.glb`, `HTML.glb`, `CSS.glb`, positions them, and builds the `stations` marker cylinders (`userData` carries `title` / `text`). The proximity/panel interaction for stations is **not built yet**.
 
-### Gotcha: duplicate `animate()`
+### The robot model
 
-Both `main.js` (line ~23) and `moviment.js` (line ~8) declare a global function named `animate` and call it. Because `moviment.js` loads later it redefines `window.animate`, and since `requestAnimationFrame(animate)` re-resolves the name each frame, the running loop switches from main.js's to moviment.js's version after moviment.js loads. If you edit the render loop, edit the one in `moviment.js` — the one in `main.js` is dead once the page finishes loading.
+`robot.glb` (~7.5 MB, Draco-compressed) is a heavily reduced version of the team's Onshape CAD assembly, needed for the site to run — commit it (it is not gitignored). It renders as a single static chassis with **no wheels**; `robot.js` adds procedural mecanum wheels on top at the real CAD wheel positions.
+
+To regenerate it from a fresh CAD export, see `tools/README.md` — `tools/rename_wheels.mjs` then `tools/shrink3.mjs`. `flatten` is what lets `join` collapse the ~56k CAD primitives down to ~60, at the cost of erasing the wheel node hierarchy — hence the procedural wheels. `WHEEL_LOCAL` in `robot.js` is the wheel-centre list `rename_wheels.mjs` prints (`shrink3.mjs`'s `final bounds` must equal its `chassis-only bounds` for those coordinates to stay valid).
+
+Chrome aggressively caches the CDN and local scripts here; when testing edits, serve on a **fresh port** each time rather than trusting a reload.
 
 ### Unused assets
 
-Only `Py.glb`, `HTML.glb`, `CSS.glb` are loaded. `Chair.glb`, `Untitled.glb`, `Sem título.glb`, `python_logo.3mf.glb` are present but unreferenced. `index.html` also has a stray `<script src="https://unpkg.com"></script>` tag that does nothing.
+`Chair.glb`, `Untitled.glb`, `Sem título.glb`, `python_logo.3mf.glb`, and the leftover experiment images (`waternormals.jpg`, `download.jpeg`, `waterclean.webp`, `Esther ...jpeg`) are present but unreferenced.
